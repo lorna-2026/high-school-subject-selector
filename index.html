@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线体育选科系统（多人版）</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 头部导航 */
+        .header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 20px 0;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+        }
+        
+        .free-badge {
+            display: inline-block;
+            background-color: #2ecc71;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .tab-btn {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #495057;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .tab-btn.active {
+            color: #3498db;
+            font-weight: 600;
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #3498db;
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+        
+        /* 选项卡内容 */
+        .tab-content {
+            display: none;
+            background-color: white;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 选科表单样式 */
+        .form-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        
+        .btn {
+            padding: 14px 30px;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(to right, #27ae60, #219653);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(39, 174, 96, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .reset-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            margin-left: 10px;
+        }
+        
+        .reset-btn:hover {
+            background: linear-gradient(to right, #c0392b, #a93226);
+            box-shadow: 0 5px 10px rgba(192, 57, 43, 0.2);
+        }
+        
+        /* 科目卡片 */
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .subject-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #3498db;
+            transition: transform 0.3s;
+        }
+        
+        .subject-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .subject-card.full {
+            border-left-color: #e74c3c;
+            opacity: 0.8;
+        }
+        
+        .subject-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .subject-count {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #3498db;
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+        
+        .progress-fill.high {
+            background-color: #e74c3c;
+        }
+        
+        .full-badge {
+            display: inline-block;
+            background-color: #e74c3c;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        /* 成功/错误消息 */
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* 统计面板 */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #3498db;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
+        
+        /* 数据表格 */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .data-table th {
+            background-color: #f2f6fc;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        /* 管理面板 */
+        .admin-panel {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+        
+        .admin-sidebar {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .admin-controls {
+            margin-bottom: 30px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        /* 登录界面 */
+        .login-container {
+            max-width: 500px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .login-message {
+            margin-top: 20px;
+            text-align: center;
+            color: #e74c3c;
+        }
+        
+        /* 实时指示器 */
+        .real-time-indicator {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #2ecc71;
+            margin-left: 10px;
+        }
+        
+        .pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab-btn {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+            }
+            
+            .admin-panel {
+                grid-template-columns: 1fr;
+            }
+            
+            .subjects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .gender-options {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+        }
+        
+        .gender-option {
+            display: flex;
+            align-items: center;
+        }
+        
+        .gender-option input {
+            width: auto;
+            margin-right: 8px;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn-export {
+            background: linear-gradient(to right, #3498db, #2980b9);
+        }
+        
+        .btn-export:hover {
+            background: linear-gradient(to right, #2980b9, #2573a7);
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="loginScreen" class="login-container">
+        <h2 class="login-title">管理员登录</h2>
+        <div class="form-group">
+            <label for="adminPassword">管理员密码</label>
+            <input type="password" id="adminPassword" placeholder="请输入管理员密码">
+        </div>
+        <button id="loginBtn" class="btn">登录</button>
+        <p class="login-message" id="loginMessage"></p>
+        <div style="margin-top: 30px; text-align: center;">
+            <p>学生选科无需登录，请点击下方按钮进入选科界面</p>
+            <button id="studentAccessBtn" class="btn" style="margin-top: 10px;">学生选科入口</button>
+        </div>
+    </div>
+
+    <!-- 主应用界面 -->
+    <div id="mainApp" style="display: none;">
+        <div class="header">
+            <div class="header-content">
+                <div>
+                    <h1>在线体育选科系统 <span class="free-badge">免费</span></h1>
+                    <p>支持多人同时在线选科，数据实时同步</p>
+                </div>
+                <div>
+                    <span id="userType">学生选科界面</span>
+                    <span class="real-time-indicator" id="realtimeIndicator">
+                        <span class="pulse"></span> 实时更新
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="tab-btn active" data-tab="selection">选科系统</button>
+            <button class="tab-btn" data-tab="subjects">科目情况</button>
+            <button class="tab-btn" data-tab="admin" id="adminTab">管理后台</button>
+        </div>
+        
+        <!-- 选科系统选项卡 -->
+        <div id="selection" class="tab-content active">
+            <div class="form-section">
+                <h2 class="section-title">体育选科申请</h2>
+                
+                <div class="alert alert-success" id="successMessage">
+                    <i class="fas fa-check-circle"></i> 选科成功！您已成功选择 <span id="selectedSubject"></span> 科目。
+                </div>
+                
+                <div class="alert alert-error" id="errorMessage">
+                    <i class="fas fa-exclamation-circle"></i> <span id="errorText"></span>
+                </div>
+                
+                <form id="sportsSelectionForm">
+                    <div class="form-group">
+                        <label for="studentName" class="required">学生姓名</label>
+                        <input type="text" id="studentName" placeholder="请输入您的姓名" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="required">性别</label>
+                        <div class="gender-options">
+                            <div class="gender-option">
+                                <input type="radio" id="male" name="gender" value="男" required>
+                                <label for="male" style="display:inline; font-weight:normal">男</label>
+                            </div>
+                            <div class="gender-option">
+                                <input type="radio" id="female" name="gender" value="女" required>
+                                <label for="female" style="display:inline; font-weight:normal">女</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="className" class="required">班级</label>
+                        <input type="text" id="className" placeholder="例如：高三(1)班" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="studentId" class="required">班级学号</label>
+                        <input type="text" id="studentId" placeholder="请输入班级学号" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="idCard" class="required">身份证号码</label>
+                        <input type="text" id="idCard" placeholder="请输入18位身份证号码" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sportSubject" class="required">选科科目</label>
+                        <select id="sportSubject" required>
+                            <option value="">请选择体育科目</option>
+                            <!-- 科目选项将由JavaScript动态生成 -->
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn">提交选科申请</button>
+                    <button type="button" class="btn reset-btn" id="resetBtn">重置表单</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 科目情况选项卡 -->
+        <div id="subjects" class="tab-content">
+            <h2 class="section-title">科目名额情况</h2>
+            <div class="subjects-grid" id="subjectsGrid">
+                <!-- 科目卡片将由JavaScript动态生成 -->
+            </div>
+            
+            <h2 class="section-title" style="margin-top: 30px;">已选科学生 (最近20条)</h2>
+            <div class="table-container">
+                <table class="data-table" id="recentRegistrationsTable">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>班级</th>
+                            <th>学号</th>
+                            <th>科目</th>
+                            <th>选科时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentRegistrationsBody">
+                        <!-- 最近选科记录将由JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 管理后台选项卡 -->
+        <div id="admin" class="tab-content">
+            <h2 class="section-title">管理后台 <span id="adminStatus"></span></h2>
+            
+            <div class="admin-panel">
+                <div class="admin-sidebar">
+                    <div class="admin-controls">
+                        <h3>系统控制</h3>
+                        <div class="control-group">
+                            <label>选科状态</label>
+                            <div style="margin-top: 10px;">
+                                <button id="toggleSelectionBtn" class="btn" style="width: 100%;">暂停选科</button>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>数据管理</label>
+                            <div style="margin-top: 10px;">
+                                <button id="clearDataBtn" class="btn reset-btn" style="width: 100%;">清空所有数据</button>
+                                <small style="color: #e74c3c; display: block; margin-top: 5px;">警告：此操作不可撤销！</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-controls">
+                        <h3>科目人数限制</h3>
+                        <div id="subjectLimitsControls">
+                            <!-- 科目限制输入框将由JavaScript动态生成 -->
+                        </div>
+                        <button id="updateLimitsBtn" class="btn" style="width: 100%; margin-top: 10px;">更新人数限制</button>
+                    </div>
+                    
+                    <div>
+                        <button id="logoutBtn" class="btn reset-btn" style="width: 100%;">退出管理后台</button>
+                    </div>
+                </div>
+                
+                <div class="admin-main">
+                    <div class="stats-container" id="statsContainer">
+                        <!-- 统计数据将由JavaScript动态生成 -->
+                    </div>
+                    
+                    <h3>所有选科记录</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="allRegistrationsTable">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>姓名</th>
+                                    <th>性别</th>
+                                    <th>班级</th>
+                                    <th>学号</th>
+                                    <th>身份证</th>
+                                    <th>科目</th>
+                                    <th>选科时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allRegistrationsBody">
+                                <!-- 所有选科记录将由JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="export-buttons">
+                        <button id="exportCSVBtn" class="btn btn-export">导出为CSV文件</button>
+                        <button id="exportExcelBtn" class="btn btn-export">导出为Excel文件</button>
+                        <button id="printDataBtn" class="btn">打印数据</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1p5F4nwB3Q4qYqYqYqYqYqYqYqYqYqYqYq",
+            authDomain: "sports-selection-system.firebaseapp.com",
+            databaseURL: "https://sports-selection-system-default-rtdb.firebaseio.com",
+            projectId: "sports-selection-system",
+            storageBucket: "sports-selection-system.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef1234567890"
+        };
+        
+        // 初始化Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+        
+        // 体育科目及其人数限制
+        let sportsSubjects = {
+            "篮球": { limit: 30, count: 0 },
+            "排球": { limit: 25, count: 0 },
+            "羽毛球": { limit: 35, count: 0 },
+            "乒乓球": { limit: 30, count: 0 },
+            "武术": { limit: 20, count: 0 },
+            "健美操": { limit: 25, count: 0 }
+        };
+        
+        // 系统状态
+        let isAdmin = false;
+        let selectionEnabled = true;
+        
+        // 初始化函数
+        function initApp() {
+            // 检查是否已登录
+            const adminPassword = localStorage.getItem('adminPassword');
+            if (adminPassword === 'lorna2009') {
+                isAdmin = true;
+                showMainApp();
+                showAdminTab();
+            } else {
+                // 显示登录界面
+                document.getElementById('loginScreen').style.display = 'block';
+            }
+            
+            // 监听Firebase数据变化
+            listenToDataChanges();
+            
+            // 初始化事件监听器
+            setupEventListeners();
+            
+            // 初始化科目下拉菜单
+            updateSubjectDropdown();
+            
+            // 更新科目显示
+            updateSubjectsDisplay();
+        }
+        
+        // 监听Firebase数据变化
+        function listenToDataChanges() {
+            // 监听选科记录
+            database.ref('registrations').on('value', (snapshot) => {
+                updateRegistrationsDisplay();
+            });
+            
+            // 监听科目限制
+            database.ref('subjectLimits').on('value', (snapshot) => {
+                const limits = snapshot.val();
+                if (limits) {
+                    sportsSubjects = limits;
+                    updateSubjectDropdown();
+                    updateSubjectsDisplay();
+                }
+            });
+            
+            // 监听系统状态
+            database.ref('system/selectionEnabled').on('value', (snapshot) => {
+                selectionEnabled = snapshot.val() !== false;
+                updateSelectionStatus();
+            });
+        }
+        
+        // 更新选科状态显示
+        function updateSelectionStatus() {
+            const toggleBtn = document.getElementById('toggleSelectionBtn');
+            if (toggleBtn) {
+                toggleBtn.textContent = selectionEnabled ? '暂停选科' : '开启选科';
+            }
+            
+            const statusElement = document.getElementById('adminStatus');
+            if (statusElement) {
+                statusElement.textContent = selectionEnabled ? '(选科进行中)' : '(选科已暂停)';
+                statusElement.style.color = selectionEnabled ? '#2ecc71' : '#e74c3c';
+            }
+        }
+        
+        // 更新科目下拉菜单
+        function updateSubjectDropdown() {
+            const selectEl = document.getElementById('sportSubject');
+            selectEl.innerHTML = '<option value="">请选择体育科目</option>';
+            
+            for (const [subject, info] of Object.entries(sportsSubjects)) {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = `${subject} (已选: ${info.count || 0}/${info.limit})`;
+                
+                // 如果科目已满，禁用该选项
+                if (info.count >= info.limit) {
+                    option.disabled = true;
+                }
+                
+                selectEl.appendChild(option);
+            }
+        }
+        
+        // 更新科目显示
+        function updateSubjectsDisplay() {
+            const gridEl = document.getElementById('subjectsGrid');
+            if (!gridEl) return;
+            
+            gridEl.innerHTML = '';
+            
+            for (const [subject, info] of Object.entries(sportsSubjects)) {
+                const percentage = Math.min(100, ((info.count || 0) / info.limit) * 100);
+                const isFull = (info.count || 0) >= info.limit;
+                
+                const card = document.createElement('div');
+                card.className = `subject-card ${isFull ? 'full' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="subject-name">${subject}</div>
+                    <div class="subject-count">已选: ${info.count || 0}/${info.limit} 人</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${percentage >= 90 ? 'high' : ''}" style="width: ${percentage}%"></div>
+                    </div>
+                    <div>剩余名额: ${Math.max(0, info.limit - (info.count || 0))} 人</div>
+                    ${isFull ? '<div class="full-badge" style="margin-top: 10px;">已报满</div>' : ''}
+                `;
+                
+                gridEl.appendChild(card);
+            }
+        }
+        
+        // 更新选科记录显示
+        async function updateRegistrationsDisplay() {
+            // 获取所有选科记录
+            const snapshot = await database.ref('registrations').once('value');
+            const registrations = snapshot.val() || {};
+            
+            // 转换对象为数组
+            const registrationsArray = Object.values(registrations);
+            
+            // 更新科目计数
+            updateSubjectCounts(registrationsArray);
+            
+            // 更新最近选科记录
+            updateRecentRegistrations(registrationsArray);
+            
+            // 更新管理后台的所有记录
+            if (isAdmin) {
+                updateAllRegistrations(registrationsArray);
+                updateStatistics(registrationsArray);
+            }
+        }
+        
+        // 更新科目计数
+        function updateSubjectCounts(registrations) {
+            // 重置计数
+            for (const subject in sportsSubjects) {
+                sportsSubjects[subject].count = 0;
+            }
+            
+            // 计算每个科目的计数
+            registrations.forEach(registration => {
+                if (sportsSubjects[registration.subject]) {
+                    sportsSubjects[registration.subject].count++;
+                }
+            });
+            
+            // 更新科目显示
+            updateSubjectDropdown();
+            updateSubjectsDisplay();
+        }
+        
+        // 更新最近选科记录
+        function updateRecentRegistrations(registrations) {
+            const tbody = document.getElementById('recentRegistrationsBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // 按时间排序（最新的在前）
+            const sortedRegistrations = registrations.sort((a, b) => 
+                new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
+            ).slice(0, 20); // 只显示最近的20条
+            
+            sortedRegistrations.forEach((reg, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${reg.name}</td>
+                    <td>${reg.gender}</td>
+                    <td>${reg.class}</td>
+                    <td>${reg.studentId}</td>
+                    <td>${reg.subject}</td>
+                    <td>${reg.timestamp || '未知'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 更新所有选科记录（管理员）
+        function updateAllRegistrations(registrations) {
+            const tbody = document.getElementById('allRegistrationsBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // 按时间排序（最新的在前）
+            const sortedRegistrations = registrations.sort((a, b) => 
+                new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
+            );
+            
+            sortedRegistrations.forEach((reg, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${reg.name}</td>
+                    <td>${reg.gender}</td>
+                    <td>${reg.class}</td>
+                    <td>${reg.studentId}</td>
+                    <td>${reg.idCard}</td>
+                    <td>${reg.subject}</td>
+                    <td>${reg.timestamp || '未知'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 更新统计数据
+        function updateStatistics(registrations) {
+            const statsContainer = document.getElementById('statsContainer');
+            if (!statsContainer) return;
+            
+            // 计算统计数据
+            const totalStudents = registrations.length;
+            const maleCount = registrations.filter(r => r.gender === '男').length;
+            const femaleCount = registrations.filter(r => r.gender === '女').length;
+            
+            // 按科目统计
+            const subjectStats = {};
+            for (const subject in sportsSubjects) {
+                subjectStats[subject] = registrations.filter(r => r.subject === subject).length;
+            }
+            
+            // 按班级统计
+            const classStats = {};
+            registrations.forEach(reg => {
+                const className = reg.class || '未知班级';
+                classStats[className] = (classStats[className] || 0) + 1;
+            });
+            const classCount = Object.keys(classStats).length;
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">总选科人数</div>
+                    <div class="stat-value">${totalStudents}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">男生人数</div>
+                    <div class="stat-value">${maleCount}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">女生人数</div>
+                    <div class="stat-value">${femaleCount}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">涉及班级数</div>
+                    <div class="stat-value">${classCount}</div>
+                </div>
+            `;
+            
+            // 添加科目统计
+            for (const [subject, count] of Object.entries(subjectStats)) {
+                const limit = sportsSubjects[subject]?.limit || 0;
+                const percentage = limit > 0 ? Math.round((count / limit) * 100) : 0;
+                
+                statsContainer.innerHTML += `
+                    <div class="stat-card">
+                        <div class="stat-label">${subject}</div>
+                        <div class="stat-value">${count}</div>
+                        <div class="stat-label">${percentage}% (${count}/${limit})</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 登录按钮
+            document.getElementById('loginBtn').addEventListener('click', () => {
+                const password = document.getElementById('adminPassword').value;
+                if (password === 'admin123') {
+                    localStorage.setItem('adminPassword', password);
+                    isAdmin = true;
+                    showMainApp();
+                    showAdminTab();
+                } else {
+                    document.getElementById('loginMessage').textContent = '密码错误！请重试。';
+                }
+            });
+            
+            // 学生入口按钮
+            document.getElementById('studentAccessBtn').addEventListener('click', () => {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                document.getElementById('userType').textContent = '学生选科界面';
+                isAdmin = false;
+            });
+            
+            // 选项卡切换
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // 移除所有选项卡的active类
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // 为当前选项卡添加active类
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.add('active');
+                    
+                    // 如果是管理后台且未登录，显示登录界面
+                    if (btn.dataset.tab === 'admin' && !isAdmin) {
+                        document.getElementById('mainApp').style.display = 'none';
+                        document.getElementById('loginScreen').style.display = 'block';
+                        document.getElementById('loginMessage').textContent = '请先登录管理后台';
+                    }
+                });
+            });
+            
+            // 表单提交
+            document.getElementById('sportsSelectionForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // 检查选科是否开启
+                if (!selectionEnabled) {
+                    showError('选科功能已暂停，请稍后再试或联系管理员。');
+                    return;
+                }
+                
+                // 获取表单数据
+                const name = document.getElementById('studentName').value.trim();
+                const gender = document.querySelector('input[name="gender"]:checked')?.value;
+                const className = document.getElementById('className').value.trim();
+                const studentId = document.getElementById('studentId').value.trim();
+                const idCard = document.getElementById('idCard').value.trim();
+                const subject = document.getElementById('sportSubject').value;
+                
+                // 验证表单
+                if (!name || !gender || !className || !studentId || !idCard || !subject) {
+                    showError('请填写所有必填字段！');
+                    return;
+                }
+                
+                // 验证身份证
+                if (!validateIdCard(idCard)) {
+                    showError('请输入有效的18位身份证号码！');
+                    return;
+                }
+                
+                // 检查科目是否已满
+                if (sportsSubjects[subject].count >= sportsSubjects[subject].limit) {
+                    showError(`科目 ${subject} 人数已满，请选择其他科目！`);
+                    return;
+                }
+                
+                // 检查是否已选科
+                const snapshot = await database.ref('registrations').orderByChild('idCard').equalTo(idCard).once('value');
+                if (snapshot.exists()) {
+                    showError('该身份证号码已选科，每人只能选择一项体育科目！');
+                    return;
+                }
+                
+                // 创建选科记录
+                const registration = {
+                    name,
+                    gender,
+                    class: className,
+                    studentId,
+                    idCard,
+                    subject,
+                    timestamp: new Date().toLocaleString('zh-CN')
+                };
+                
+                // 保存到Firebase
+                try {
+                    const newRef = database.ref('registrations').push();
+                    await newRef.set(registration);
+                    
+                    // 显示成功消息
+                    showSuccess(`选科成功！您已成功选择 ${subject} 科目。`);
+                    
+                    // 重置表单
+                    document.getElementById('sportsSelectionForm').reset();
+                    
+                    // 3秒后隐藏成功消息
+                    setTimeout(() => {
+                        document.getElementById('successMessage').style.display = 'none';
+                    }, 5000);
+                    
+                } catch (error) {
+                    showError('提交失败，请重试！');
+                    console.error('保存数据时出错:', error);
+                }
+            });
+            
+            // 重置表单
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                document.getElementById('sportsSelectionForm').reset();
+                hideMessages();
+            });
+            
+            // 管理后台功能
+            setupAdminControls();
+        }
+        
+        // 设置管理后台控制
+        function setupAdminControls() {
+            // 切换选科状态
+            document.getElementById('toggleSelectionBtn')?.addEventListener('click', () => {
+                selectionEnabled = !selectionEnabled;
+                database.ref('system').update({ selectionEnabled });
+                updateSelectionStatus();
+            });
+            
+            // 清空数据
+            document.getElementById('clearDataBtn')?.addEventListener('click', () => {
+                if (confirm('确定要清空所有选科数据吗？此操作不可撤销！')) {
+                    database.ref('registrations').remove();
+                    showSuccess('数据已清空！');
+                }
+            });
+            
+            // 更新科目限制
+            document.getElementById('updateLimitsBtn')?.addEventListener('click', async () => {
+                const newLimits = {};
+                for (const subject in sportsSubjects) {
+                    const input = document.getElementById(`limit-${subject}`);
+                    if (input) {
+                        const newLimit = parseInt(input.value);
+                        if (!isNaN(newLimit) && newLimit > 0) {
+                            newLimits[subject] = { ...sportsSubjects[subject], limit: newLimit };
+                        }
+                    }
+                }
+                
+                if (Object.keys(newLimits).length > 0) {
+                    await database.ref('subjectLimits').set(newLimits);
+                    showSuccess('科目人数限制已更新！');
+                }
+            });
+            
+            // 退出登录
+            document.getElementById('logoutBtn')?.addEventListener('click', () => {
+                localStorage.removeItem('adminPassword');
+                location.reload();
+            });
+            
+            // 导出功能
+            document.getElementById('exportCSVBtn')?.addEventListener('click', exportToCSV);
+            document.getElementById('exportExcelBtn')?.addEventListener('click', exportToExcel);
+            document.getElementById('printDataBtn')?.addEventListener('click', () => window.print());
+            
+            // 初始化科目限制输入框
+            updateSubjectLimitsControls();
+        }
+        
+        // 更新科目限制控制
+        function updateSubjectLimitsControls() {
+            const container = document.getElementById('subjectLimitsControls');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            for (const [subject, info] of Object.entries(sportsSubjects)) {
+                const div = document.createElement('div');
+                div.style.marginBottom = '10px';
+                div.innerHTML = `
+                    <label for="limit-${subject}">${subject}</label>
+                    <input type="number" id="limit-${subject}" value="${info.limit}" min="1" max="1000" style="width: 100%;">
+                `;
+                container.appendChild(div);
+            }
+        }
+        
+        // 显示主应用
+        function showMainApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userType').textContent = isAdmin ? '管理员后台' : '学生选科界面';
+            
+            if (isAdmin) {
+                document.getElementById('adminTab').style.display = 'block';
+            } else {
+                document.getElementById('adminTab').style.display = 'none';
+            }
+        }
+        
+        // 显示管理后台
+        function showAdminTab() {
+            if (isAdmin) {
+                // 切换到管理后台选项卡
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                document.querySelector('[data-tab="admin"]').classList.add('active');
+                document.getElementById('admin').classList.add('active');
+            }
+        }
+        
+        // 显示成功消息
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            const selectedSubjectEl = document.getElementById('selectedSubject');
+            
+            if (selectedSubjectEl) {
+                selectedSubjectEl.textContent = message.split(' ').pop() || '';
+            }
+            
+            successEl.textContent = `✓ ${message}`;
+            successEl.style.display = 'block';
+            
+            // 隐藏错误消息
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        // 显示错误消息
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            const errorTextEl = document.getElementById('errorText');
+            
+            errorTextEl.textContent = message;
+            errorEl.style.display = 'block';
+            
+            // 隐藏成功消息
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        // 隐藏所有消息
+        function hideMessages() {
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        // 身份证验证
+        function validateIdCard(idCard) {
+            const idCardPattern = /^\d{17}[\dXx]$/;
+            return idCardPattern.test(idCard);
+        }
+        
+        // 导出为CSV
+        async function exportToCSV() {
+            const snapshot = await database.ref('registrations').once('value');
+            const registrations = snapshot.val() || {};
+            const registrationsArray = Object.values(registrations);
+            
+            if (registrationsArray.length === 0) {
+                alert('没有数据可导出！');
+                return;
+            }
+            
+            // 创建CSV内容
+            const headers = ['姓名', '性别', '班级', '学号', '身份证', '科目', '选科时间'];
+            const csvRows = [
+                headers.join(','),
+                ...registrationsArray.map(reg => [
+                    `"${reg.name}"`,
+                    `"${reg.gender}"`,
+                    `"${reg.class}"`,
+                    `"${reg.studentId}"`,
+                    `"${reg.idCard}"`,
+                    `"${reg.subject}"`,
+                    `"${reg.timestamp || ''}"`
+                ].join(','))
+            ];
+            
+            const csvContent = csvRows.join('\n');
+            
+            // 创建下载链接
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `体育选科数据_${new Date().toLocaleDateString('zh-CN')}.csv`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+        
+        // 导出为Excel（模拟）
+        function exportToExcel() {
+            exportToCSV(); // 暂时用CSV代替
+            alert('Excel文件导出功能需要服务器支持，已导出为CSV格式。');
+        }
+        
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
