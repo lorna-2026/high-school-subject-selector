@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高中分科意向测评系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .dark-theme {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .dark-theme .container {
+            background: #2c3e50;
+        }
+
+        header {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .dark-theme header {
+            background: linear-gradient(135deg, #1a5276 0%, #17202a 100%);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .progress-container {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .dark-theme .progress-container {
+            background: #34495e;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .step-dot {
+            width: 40px;
+            height: 40px;
+            background: #bdc3c7;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .step-dot.active {
+            background: #3498db;
+            transform: scale(1.1);
+        }
+
+        .step-dot.completed {
+            background: #27ae60;
+        }
+
+        .step-label {
+            position: absolute;
+            top: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .dark-theme .step-label {
+            color: #bdc3c7;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #bdc3c7;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #3498db, #27ae60);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .step {
+            padding: 30px;
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .dark-theme h2 {
+            color: #ecf0f1;
+            border-bottom-color: #1abc9c;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .dark-theme label {
+            color: #ecf0f1;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .dark-theme input, .dark-theme select {
+            background: #34495e;
+            border-color: #4a6572;
+            color: #ecf0f1;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-prev {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-next, .btn-submit {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .question {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .dark-theme .question {
+            background: #34495e;
+            border-left-color: #1abc9c;
+        }
+
+        .rating {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .rating label {
+            display: inline-flex;
+            align-items: center;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        .rating input[type="radio"] {
+            margin-right: 8px;
+            width: auto;
+        }
+
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .score-table th, .score-table td {
+            border: 1px solid #e0e6ed;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .score-table th {
+            background: #3498db;
+            color: white;
+        }
+
+        .score-table input {
+            width: 100px;
+            text-align: center;
+        }
+
+        .choice {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .checkbox-column {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .dark-theme .checkbox-column {
+            background: #34495e;
+        }
+
+        .checkbox-column h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .dark-theme .checkbox-column h4 {
+            color: #ecf0f1;
+        }
+
+        .checkbox-column label {
+            display: block;
+            margin: 8px 0;
+            font-weight: normal;
+        }
+
+        .checkbox-column input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .input-error {
+            border-color: #e74c3c !important;
+        }
+
+        .results-container {
+            padding: 30px;
+        }
+
+        .result-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .recommendation-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .recommendation-card.physics {
+            border-left: 5px solid #e74c3c;
+        }
+
+        .recommendation-card.history {
+            border-left: 5px solid #3498db;
+        }
+
+        .recommendation-card.balanced {
+            border-left: 5px solid #2ecc71;
+        }
+
+        .score-comparison {
+            margin-bottom: 30px;
+        }
+
+        .score-bars {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .score-bar {
+            flex: 1;
+            text-align: center;
+        }
+
+        .bar-label {
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .bar-container {
+            height: 200px;
+            width: 40px;
+            margin: 0 auto;
+            background: #ecf0f1;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dark-theme .bar-container {
+            background: #4a6572;
+        }
+
+        .bar-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            border-radius: 20px;
+            transition: height 1s ease-out;
+        }
+
+        .bar-fill.physics {
+            background: linear-gradient(to top, #e74c3c, #c0392b);
+        }
+
+        .bar-fill.history {
+            background: linear-gradient(to top, #3498db, #2980b9);
+        }
+
+        .bar-value {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .combinations-list {
+            margin: 30px 0;
+        }
+
+        .combination-item {
+            background: white;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .dark-theme .combination-item {
+            background: #34495e;
+            border-color: #4a6572;
+        }
+
+        .combination-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .combination-item.rank-1 {
+            border-color: #f1c40f;
+            background: linear-gradient(135deg, #fff8e1, #fffde7);
+        }
+
+        .dark-theme .combination-item.rank-1 {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+        }
+
+        .rank {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: #f1c40f;
+            color: #333;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .combo-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .dark-theme .combo-name {
+            color: #ecf0f1;
+        }
+
+        .combo-score {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .combo-desc {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .dark-theme .combo-desc {
+            color: #bdc3c7;
+        }
+
+        .analysis-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .dark-theme .analysis-section {
+            background: #34495e;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .result-btn {
+            padding: 12px 24px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .result-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+            border-top: 1px solid #e0e6ed;
+        }
+
+        .dark-theme footer {
+            color: #bdc3c7;
+            border-top-color: #4a6572;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 10px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .score-bars {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            .btn, .result-actions, #themeToggle, footer {
+                display: none !important;
+            }
+            
+            .step, .results-container {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+            
+            .combination-item.rank-1:before {
+                display: none !important;
+            }
+        }
+
+        #themeToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        #themeToggle:hover {
+            background: #2980b9;
+            transform: rotate(30deg);
+        }
+
+        #printBtn {
+            background: #2ecc71;
+        }
+
+        #exportBtn {
+            background: #9b59b6;
+        }
+
+        #shareResultsBtn {
+            background: #e67e22;
+        }
+
+        #restartBtn {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <button id="themeToggle" onclick="toggleTheme()">🌙</button>
+    
+    <div class="container">
+        <header>
+            <h1>高中分科意向测评系统</h1>
+            <p class="subtitle">科学评估，智能推荐，助你做出最佳选科决策</p>
+        </header>
+
+        <div class="progress-container">
+            <div class="step-indicator">
+                <div class="step-dot active" data-step="1">
+                    1
+                    <div class="step-label">基本信息</div>
+                </div>
+                <div class="step-dot" data-step="2">
+                    2
+                    <div class="step-label">学科兴趣</div>
+                </div>
+                <div class="step-dot" data-step="3">
+                    3
+                    <div class="step-label">学科成绩</div>
+                </div>
+                <div class="step-dot" data-step="4">
+                    4
+                    <div class="step-label">学习能力</div>
+                </div>
+                <div class="step-dot" data-step="5">
+                    5
+                    <div class="step-label">专业倾向</div>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <main id="app">
+            <!-- 步骤1：基本信息 -->
+            <div class="step active" id="step1">
+                <h2>第一步：基本信息</h2>
+                <div class="form-group">
+                    <label>姓名（可选）：</label>
+                    <input type="text" id="name" placeholder="可不填">
+                </div>
+                <div class="form-group">
+                    <label>年级：</label>
+                    <select id="grade">
+                        <option value="">请选择</option>
+                        <option value="高一上">高一上学期</option>
+                        <option value="高一下">高一下学期</option>
+                        <option value="高二">高二年级</option>
+                    </select>
+                    <div class="error" id="gradeError">请选择年级</div>
+                </div>
+                <div class="form-group">
+                    <label>所在省份：</label>
+                    <input type="text" id="province" placeholder="如：江苏省">
+                </div>
+                <div class="form-group">
+                    <label>你所在学校实行的是哪种选科模式？</label>
+                    <select id="mode">
+                        <option value="3+1+2">3+1+2模式</option>
+                        <option value="3+3">3+3模式</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-next" onclick="nextStep(2)">开始测评</button>
+                </div>
+            </div>
+
+            <!-- 步骤2：学科兴趣评估 -->
+            <div class="step" id="step2">
+                <h2>第二步：学科兴趣评估</h2>
+                <p>请评估你对以下学科的兴趣程度（1-5分，1分表示不感兴趣，5分表示非常感兴趣）</p>
+                
+                <div class="question">
+                    <p>1. 我对物理学科的兴趣：</p>
+                    <div class="rating">
+                        <label><input type="radio" name="interest_physics" value="1" required> 1分（不感兴趣）</label>
+                        <label><input type="radio" name="interest_physics" value="2"> 2分（不太感兴趣）</label>
+                        <label><input type="radio" name="interest_physics" value="3"> 3分（一般）</label>
+                        <label><input type="radio" name="interest_physics" value="4"> 4分（比较感兴趣）</label>
+                        <label><input type="radio" name="interest_physics" value="5"> 5分（非常感兴趣）</label>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <p>2. 我对历史学科的兴趣：</p>
+                    <div class="rating">
+                        <label><input type="radio" name="interest_history" value="1" required> 1分（不感兴趣）</label>
+                        <label><input type="radio" name="interest_history" value="2"> 2分（不太感兴趣）</label>
+                        <label><input type="radio" name="interest_history" value="3"> 3分（一般）</label>
+                        <label><input type="radio" name="interest_history" value="4"> 4分（比较感兴趣）</label>
+                        <label><input type="radio" name="interest_history" value="5"> 5分（非常感兴趣）</label>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <p>3. 我对化学学科的兴趣：</p>
+                    <div class="rating">
+                        <label><input type="radio" name="interest_chemistry" value="1" required> 1分（不感兴趣）</label>
+                        <label><input type="radio" name="interest_chemistry" value="2"> 2分（不太感兴趣）</label>
+                        <label><input type="radio" name="interest_chemistry" value="3"> 3分（一般）</label>
+                        <label><input type="radio" name="interest_chemistry" value="4"> 4分（比较感兴趣）</label>
+                        <label><input type="radio" name="interest_chemistry" value="5"> 5分（非常感兴趣）</label>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <p>4. 我对生物学科的兴趣：</p>
+                    <div class="rating">
+                        <label><input type="radio" name="interest_biology" value="1" required> 1分（不感兴趣）</label>
+                        <label><input type="radio" name="interest_biology" value="2"> 2分（不太感兴趣）</label>
+                        <label><input type="radio" name="interest_biology" value="3"> 3分（一般）</label>
+                        <label><input type="radio" name="interest_biology" value="4"> 4分（比较感兴趣）</label>
+                        <label><input type="radio" name="interest_biology" value="5"> 5分（非常感兴趣）</label>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <p>5. 我对地理学科的兴趣：</p>
+                    <div class="rating">
+                        <label><input type="radio" name="interest_geography" value="1" required> 1分（不感兴趣）</label>
+                        <label><input type="radio" name="interest_geography" value="2"> 2分（不太感兴趣）</label>
+                        <label><input type="radio" name="interest_geography" value="3"> 3分（一般）</label>
+                        <label><input type="radio" name="interest_geography" value="4"> 4分（比较感兴趣）</label>
+                        <label><input type="radio" name="interest_geography" value="5"> 5分（非常感兴趣）</label>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <p>6. 我对政治学科的兴趣：</p>
+                    <div class="rating">
+                        <label><input type="radio" name="interest_politics" value="1" required> 1分（不感兴趣）</label>
+                        <label><input type="radio" name="interest_politics" value="2"> 2分（不太感兴趣）</label>
+                        <label><input type="radio" name="interest_politics" value="3"> 3分（一般）</label>
+                        <label><input type="radio" name="interest_politics" value="4"> 4分（比较感兴趣）</label>
+                        <label><input type="radio" name="interest_politics" value="5"> 5分（非常感兴趣）</label>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-prev" onclick="prevStep(1)">上一步</button>
+                    <button class="btn btn-next" onclick="nextStep(3)">下一步</button>
+                </div>
+            </div>
+
+            <!-- 步骤3：学科成绩输入 -->
+            <div class="step" id="step3">
+                <h2>第三步：学科成绩</h2>
+                <p>请填写最近两次大考成绩（百分制），如未参加考试，请填写平时成绩</p>
+                
+                <table class="score-table">
+                    <thead>
+                        <tr>
+                            <th>学科</th>
+                            <th>第一次成绩</th>
+                            <th>第二次成绩</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>语文</td>
+                            <td><input type="number" min="0" max="150" id="chinese1" placeholder="0-150"></td>
+                            <td><input type="number" min="0" max="150" id="chinese2" placeholder="0-150"></td>
+                        </tr>
+                        <tr>
+                            <td>数学</td>
+                            <td><input type="number" min="0" max="150" id="math1" placeholder="0-150"></td>
+                            <td><input type="number" min="0" max="150" id="math2" placeholder="0-150"></td>
+                        </tr>
+                        <tr>
+                            <td>英语</td>
+                            <td><input type="number" min="0" max="150" id="english1" placeholder="0-150"></td>
+                            <td><input type="number" min="0" max="150" id="english2" placeholder="0-150"></td>
+                        </tr>
+                        <tr>
+                            <td>物理</td>
+                            <td><input type="number" min="0" max="100" id="physics1" placeholder="0-100"></td>
+                            <td><input type="number" min="0" max="100" id="physics2" placeholder="0-100"></td>
+                        </tr>
+                        <tr>
+                            <td>历史</td>
+                            <td><input type="number" min="0" max="100" id="history1" placeholder="0-100"></td>
+                            <td><input type="number" min="0" max="100" id="history2" placeholder="0-100"></td>
+                        </tr>
+                        <tr>
+                            <td>化学</td>
+                            <td><input type="number" min="0" max="100" id="chemistry1" placeholder="0-100"></td>
+                            <td><input type="number" min="0" max="100" id="chemistry2" placeholder="0-100"></td>
+                        </tr>
+                        <tr>
+                            <td>生物</td>
+                            <td><input type="number" min="0" max="100" id="biology1" placeholder="0-100"></td>
+                            <td><input type="number" min="0" max="100" id="biology2" placeholder="0-100"></td>
+                        </tr>
+                        <tr>
+                            <td>地理</td>
+                            <td><input type="number" min="0" max="100" id="geography1" placeholder="0-100"></td>
+                            <td><input type="number" min="0" max="100" id="geography2" placeholder="0-100"></td>
+                        </tr>
+                        <tr>
+                            <td>政治</td>
+                            <td><input type="number" min="0" max="100" id="politics1" placeholder="0-100"></td>
+                            <td><input type="number" min="0" max="100" id="politics2" placeholder="0-100"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="error" id="scoreError" style="text-align: center; margin-top: 10px;"></div>
+                
+                <div class="button-group">
+                    <button class="btn btn-prev" onclick="prevStep(2)">上一步</button>
+                    <button class="btn btn-next" onclick="nextStep(4)">下一步</button>
+                </div>
+            </div>
+
+            <!-- 步骤4：学习能力与风格 -->
+            <div class="step" id="step4">
+                <h2>第四步：学习能力与风格</h2>
+                
+                <div class="question">
+                    <p>1. 你的逻辑推理能力如何？</p>
+                    <select class="choice" id="ability_logic">
+                        <option value="">请选择</option>
+                        <option value="1">较弱</option>
+                        <option value="2">一般</option>
+                        <option value="3">较强</option>
+                        <option value="4">很强</option>
+                    </select>
+                </div>
+                
+                <div class="question">
+                    <p>2. 你的记忆能力如何？</p>
+                    <select class="choice" id="ability_memory">
+                        <option value="">请选择</option>
+                        <option value="1">较差</option>
+                        <option value="2">一般</option>
+                        <option value="3">较好</option>
+                        <option value="4">很好</option>
+                    </select>
+                </div>
+                
+                <div class="question">
+                    <p>3. 你的分析归纳能力如何？</p>
+                    <select class="choice" id="ability_analysis">
+                        <option value="">请选择</option>
+                        <option value="1">较弱</option>
+                        <option value="2">一般</option>
+                        <option value="3">较强</option>
+                        <option value="4">很强</option>
+                    </select>
+                </div>
+                
+                <div class="question">
+                    <p>4. 你的表达论述能力如何？</p>
+                    <select class="choice" id="ability_express">
+                        <option value="">请选择</option>
+                        <option value="1">较弱</option>
+                        <option value="2">一般</option>
+                        <option value="3">较强</option>
+                        <option value="4">很强</option>
+                    </select>
+                </div>
+                
+                <div class="question">
+                    <p>5. 当你遇到复杂问题时，你更倾向于：</p>
+                    <select class="choice" id="problem_solving">
+                        <option value="">请选择</option>
+                        <option value="logic">通过逻辑推理逐步解决</option>
+                        <option value="memory">回忆类似问题的解决方法</option>
+                        <option value="analysis">分解问题，逐个分析</option>
+                        <option value="intuition">凭直觉寻找解决方案</option>
+                    </select>
+                </div>
+                
+                <div class="question">
+                    <p>6. 你的学习风格（可多选）：</p>
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox" name="learning_style" value="visual"> 视觉型（喜欢图表、图像）</label>
+                        <label><input type="checkbox" name="learning_style" value="auditory"> 听觉型（喜欢听讲、讨论）</label>
+                        <label><input type="checkbox" name="learning_style" value="reading"> 阅读型（喜欢阅读文字）</label>
+                        <label><input type="checkbox" name="learning_style" value="practice"> 实践型（喜欢动手操作）</label>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-prev" onclick="prevStep(3)">上一步</button>
+                    <button class="btn btn-next" onclick="nextStep(5)">下一步</button>
+                </div>
+            </div>
+
+            <!-- 步骤5：职业与专业倾向 -->
+            <div class="step" id="step5">
+                <h2>第五步：职业与专业倾向</h2>
+                
+                <div class="question">
+                    <p>你感兴趣的专业方向有哪些？（可多选）</p>
+                    <div class="checkbox-grid">
+                        <div class="checkbox-column">
+                            <h4>理工类</h4>
+                            <label><input type="checkbox" name="major" value="engineering"> 工程类（机械、电子、土木等）</label>
+                            <label><input type="checkbox" name="major" value="computer"> 计算机与信息技术</label>
+                            <label><input type="checkbox" name="major" value="medical"> 医学与生物科学</label>
+                            <label><input type="checkbox" name="major" value="science"> 理学（数学、物理、化学等）</label>
+                        </div>
+                        <div class="checkbox-column">
+                            <h4>文史类</h4>
+                            <label><input type="checkbox" name="major" value="law"> 法学类</label>
+                            <label><input type="checkbox" name="major" value="education"> 教育学类</label>
+                            <label><input type="checkbox" name="major" value="literature"> 语言文学类</label>
+                            <label><input type="checkbox" name="major" value="history"> 历史学类</label>
+                        </div>
+                        <div class="checkbox-column">
+                            <h4>经管类</h4>
+                            <label><input type="checkbox" name="major" value="economics"> 经济学类</label>
+                            <label><input type="checkbox" name="major" value="management"> 管理学类</label>
+                            <label><input type="checkbox" name="major" value="finance"> 金融学类</label>
+                            <label><input type="checkbox" name="major" value="business"> 工商管理类</label>
+                        </div>
+                        <div class="checkbox-column">
+                            <h4>其他类</h4>
+                            <label><input type="checkbox" name="major" value="art"> 艺术类</label>
+                            <label><input type="checkbox" name="major" value="sports"> 体育类</label>
+                            <label><input type="checkbox" name="major" value="agriculture"> 农学类</label>
+                            <label><input type="checkbox" name="major" value="military"> 军事公安类</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <p>你更倾向于哪种职业类型？</p>
+                    <select class="choice" id="career_type">
+                        <option value="">请选择</option>
+                        <option value="research">研究型（科研、分析）</option>
+                        <option value="social">社会型（教育、服务）</option>
+                        <option value="enterprise">企业型（管理、创业）</option>
+                        <option value="artistic">艺术型（创造、设计）</option>
+                        <option value="conventional">常规型（事务、行政）</option>
+                        <option value="realistic">实际型（技术、操作）</option>
+                    </select>
+                </div>
+                
+                <div class="question">
+                    <p>家人对你选科的建议是？</p>
+                    <select class="choice" id="family_advice">
+                        <option value="">请选择</option>
+                        <option value="support">支持我的选择</option>
+                        <option value="advise">给出建议但尊重我的决定</option>
+                        <option value="expect">有明确的期望和要求</option>
+                        <option value="undecided">不干涉，由我自己决定</option>
+                    </select>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-prev" onclick="prevStep(4)">上一步</button>
+                    <button class="btn btn-submit" onclick="calculateResults()">查看测评结果</button>
+                </div>
+            </div>
+            
+            <!-- 步骤6：结果页面 -->
+            <div class="step" id="step6">
+                <!-- 结果内容将在calculateResults()中动态生成 -->
+            </div>
+        </main>
+
+        <footer>
+            <p>© 2024 高中分科测评系统 | 本测评结果仅供参考，请结合个人实际情况和老师、家长建议做出最终决定</p>
+        </footer>
+    </div>
+
+    <script>
+    // ==================== 主程序开始 ====================
+    (function() {
+        'use strict';
+        
+        // 数据存储对象
+        var userData = {
+            personalInfo: {},
+            interests: {},
+            scores: {},
+            abilities: {},
+            career: {},
+            results: {}
+        };
+
+        // 当前步骤
+        var currentStep = 1;
+        var totalSteps = 5;
+
+        // 等待DOM加载完成后初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        function init() {
+            console.log('开始初始化测评系统...');
+            updateProgress();
+            loadSavedData();
+            initThemeToggle();
+            
+            // 添加成绩输入验证
+            var scoreInputs = document.querySelectorAll('input[type="number"]');
+            for (var i = 0; i < scoreInputs.length; i++) {
+                scoreInputs[i].addEventListener('input', function() {
+                    validateScore(this);
+                });
+            }
+            
+            console.log('高中分科意向测评系统已加载完成！');
+        }
+
+        // ==================== 主题切换 ====================
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            var themeBtn = document.getElementById('themeToggle');
+            if (document.body.classList.contains('dark-theme')) {
+                themeBtn.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeBtn.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        function initThemeToggle() {
+            var savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.getElementById('themeToggle').textContent = '☀️';
+            }
+        }
+
+        // ==================== 进度控制 ====================
+        function updateProgress() {
+            var percentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            var progressFill = document.getElementById('progressFill');
+            if (progressFill) {
+                progressFill.style.width = percentage + '%';
+            }
+            
+            // 更新步骤点状态
+            var stepDots = document.querySelectorAll('.step-dot');
+            for (var i = 0; i < stepDots.length; i++) {
+                var stepNum = i + 1;
+                if (stepNum < currentStep) {
+                    stepDots[i].classList.add('completed');
+                    stepDots[i].classList.remove('active');
+                } else if (stepNum === currentStep) {
+                    stepDots[i].classList.add('active');
+                    stepDots[i].classList.remove('completed');
+                } else {
+                    stepDots[i].classList.remove('active', 'completed');
+                }
+            }
+        }
+
+        function showStep(step) {
+            var steps = document.querySelectorAll('.step');
+            for (var i = 0; i < steps.length; i++) {
+                steps[i].classList.remove('active');
+            }
+            
+            var currentStepEl = document.getElementById('step' + step);
+            if (currentStepEl) {
+                currentStepEl.classList.add('active');
+            }
+            
+            currentStep = step;
+            updateProgress();
+            window.scrollTo(0, 0);
+        }
+
+        // ==================== 步骤导航 ====================
+        function nextStep(next) {
+            // 保存当前步骤数据
+            saveCurrentStepData();
+            showStep(next);
+        }
+
+        function prevStep(prev) {
+            saveCurrentStepData();
+            showStep(prev);
+        }
+
+        // ==================== 表单验证 ====================
+        function validateStep1() {
+            var grade = document.getElementById('grade').value;
+            if (!grade) {
+                document.getElementById('gradeError').style.display = 'block';
+                document.getElementById('grade').classList.add('input-error');
+                return false;
+            }
+            document.getElementById('gradeError').style.display = 'none';
+            document.getElementById('grade').classList.remove('input-error');
+            return true;
+        }
+
+        function validateStep2() {
+            var requiredRadios = [
+                'interest_physics', 'interest_history', 'interest_chemistry',
+                'interest_biology', 'interest_geography', 'interest_politics'
+            ];
+            
+            var isValid = true;
+            for (var i = 0; i < requiredRadios.length; i++) {
+                var name = requiredRadios[i];
+                var radios = document.getElementsByName(name);
+                var isChecked = false;
+                
+                for (var j = 0; j < radios.length; j++) {
+                    if (radios[j].checked) {
+                        isChecked = true;
+                        break;
+                    }
+                }
+                
+                if (!isChecked) {
+                    isValid = false;
+                    if (radios.length > 0) {
+                        var question = radios[0].closest('.question');
+                        if (question) {
+                            question.style.borderLeftColor = '#e74c3c';
+                        }
+                    }
+                }
+            }
+            
+            if (!isValid) {
+                alert('请完成所有学科兴趣评估！');
+            }
+            return isValid;
+        }
+
+        function validateStep3() {
+            var requiredScores = [
+                'chinese1', 'chinese2', 'math1', 'math2', 'english1', 'english2',
+                'physics1', 'physics2', 'history1', 'history2', 'chemistry1', 'chemistry2',
+                'biology1', 'biology2', 'geography1', 'geography2', 'politics1', 'politics2'
+            ];
+            
+            var isValid = true;
+            var scoreError = document.getElementById('scoreError');
+            scoreError.textContent = '';
+            scoreError.style.display = 'none';
+            
+            for (var i = 0; i < requiredScores.length; i++) {
+                var id = requiredScores[i];
+                var input = document.getElementById(id);
+                var value = parseInt(input.value) || 0;
+                var max = id.indexOf('chinese') !== -1 || id.indexOf('math') !== -1 || id.indexOf('english') !== -1 ? 150 : 100;
+                
+                if (isNaN(value) || value < 0 || value > max) {
+                    isValid = false;
+                    input.classList.add('input-error');
+                    scoreError.textContent = '请填写有效的成绩（0-150分）';
+                    scoreError.style.display = 'block';
+                } else {
+                    input.classList.remove('input-error');
+                }
+            }
+            
+            return isValid;
+        }
+
+        function validateScore(input) {
+            var value = parseInt(input.value) || 0;
+            var max = input.id.indexOf('chinese') !== -1 || input.id.indexOf('math') !== -1 || input.id.indexOf('english') !== -1 ? 150 : 100;
+            
+            if (!isNaN(value) && value >= 0 && value <= max) {
+                input.classList.remove('input-error');
+                var scoreError = document.getElementById('scoreError');
+                if (scoreError) {
+                    scoreError.style.display = 'none';
+                }
+            } else if (input.value !== '') {
+                input.classList.add('input-error');
+            }
+        }
+
+        function validateStep4() {
+            var requiredSelects = ['ability_logic', 'ability_memory', 'ability_analysis', 'ability_express', 'problem_solving'];
+            var isValid = true;
+            
+            for (var i = 0; i < requiredSelects.length; i++) {
+                var id = requiredSelects[i];
+                var select = document.getElementById(id);
+                if (!select.value) {
+                    isValid = false;
+                    select.classList.add('input-error');
+                } else {
+                    select.classList.remove('input-error');
+                }
+            }
+            
+            if (!isValid) {
+                alert('请完成所有学习能力评估！');
+            }
+            return isValid;
+        }
+
+        function validateStep5() {
+            var majorCheckboxes = document.getElementsByName('major');
+            var careerType = document.getElementById('career_type').value;
+            var familyAdvice = document.getElementById('family_advice').value;
+            
+            var isValid = true;
+            
+            // 检查是否选择了至少一个专业方向
+            var majors = false;
+            for (var i = 0; i < majorCheckboxes.length; i++) {
+                if (majorCheckboxes[i].checked) {
+                    majors = true;
+                    break;
+                }
+            }
+            
+            if (!majors) {
+                isValid = false;
+                var checkboxGrid = document.querySelector('.checkbox-grid');
+                if (checkboxGrid) {
+                    checkboxGrid.style.border = '2px solid #e74c3c';
+                }
+            } else {
+                var checkboxGrid = document.querySelector('.checkbox-grid');
+                if (checkboxGrid) {
+                    checkboxGrid.style.border = '2px solid #e0e6ed';
+                }
+            }
+            
+            if (!careerType) {
+                isValid = false;
+                document.getElementById('career_type').classList.add('input-error');
+            } else {
+                document.getElementById('career_type').classList.remove('input-error');
+            }
+            
+            if (!familyAdvice) {
+                isValid = false;
+                document.getElementById('family_advice').classList.add('input-error');
+            } else {
+                document.getElementById('family_advice').classList.remove('input-error');
+            }
+            
+            if (!isValid) {
+                alert('请完成所有职业与专业倾向问题！');
+            }
+            return isValid;
+        }
+
+        // ==================== 数据保存 ====================
+        function saveCurrentStepData() {
+            switch(currentStep) {
+                case 1:
+                    userData.personalInfo = {
+                        name: document.getElementById('name').value,
+                        grade: document.getElementById('grade').value,
+                        province: document.getElementById('province').value,
+                        mode: document.getElementById('mode').value
+                    };
+                    break;
+                    
+                case 2:
+                    userData.interests = {
+                        physics: parseInt(getCheckedRadioValue('interest_physics') || 3),
+                        history: parseInt(getCheckedRadioValue('interest_history') || 3),
+                        chemistry: parseInt(getCheckedRadioValue('interest_chemistry') || 3),
+                        biology: parseInt(getCheckedRadioValue('interest_biology') || 3),
+                        geography: parseInt(getCheckedRadioValue('interest_geography') || 3),
+                        politics: parseInt(getCheckedRadioValue('interest_politics') || 3)
+                    };
+                    break;
+                    
+                case 3:
+                    userData.scores = {
+                        chinese: [parseInt(document.getElementById('chinese1').value) || 0, parseInt(document.getElementById('chinese2').value) || 0],
+                        math: [parseInt(document.getElementById('math1').value) || 0, parseInt(document.getElementById('math2').value) || 0],
+                        english: [parseInt(document.getElementById('english1').value) || 0, parseInt(document.getElementById('english2').value) || 0],
+                        physics: [parseInt(document.getElementById('physics1').value) || 0, parseInt(document.getElementById('physics2').value) || 0],
+                        history: [parseInt(document.getElementById('history1').value) || 0, parseInt(document.getElementById('history2').value) || 0],
+                        chemistry: [parseInt(document.getElementById('chemistry1').value) || 0, parseInt(document.getElementById('chemistry2').value) || 0],
+                        biology: [parseInt(document.getElementById('biology1').value) || 0, parseInt(document.getElementById('biology2').value) || 0],
+                        geography: [parseInt(document.getElementById('geography1').value) || 0, parseInt(document.getElementById('geography2').value) || 0],
+                        politics: [parseInt(document.getElementById('politics1').value) || 0, parseInt(document.getElementById('politics2').value) || 0]
+                    };
+                    break;
+                    
+                case 4:
+                    var learningStyle = [];
+                    var styleCheckboxes = document.querySelectorAll('input[name="learning_style"]:checked');
+                    for (var i = 0; i < styleCheckboxes.length; i++) {
+                        learningStyle.push(styleCheckboxes[i].value);
+                    }
+                    
+                    userData.abilities = {
+                        logic: parseInt(document.getElementById('ability_logic').value) || 2,
+                        memory: parseInt(document.getElementById('ability_memory').value) || 2,
+                        analysis: parseInt(document.getElementById('ability_analysis').value) || 2,
+                        express: parseInt(document.getElementById('ability_express').value) || 2,
+                        problemSolving: document.getElementById('problem_solving').value || 'logic',
+                        learningStyle: learningStyle
+                    };
+                    break;
+                    
+                case 5:
+                    var majors = [];
+                    var majorCheckboxes = document.querySelectorAll('input[name="major"]:checked');
+                    for (var i = 0; i < majorCheckboxes.length; i++) {
+                        majors.push(majorCheckboxes[i].value);
+                    }
+                    
+                    userData.career = {
+                        majors: majors,
+                        careerType: document.getElementById('career_type').value || 'research',
+                        familyAdvice: document.getElementById('family_advice').value || 'support'
+                    };
+                    break;
+            }
+            
+            // 保存到本地存储
+            try {
+                localStorage.setItem('subjectSelectionData', JSON.stringify(userData));
+                console.log('数据已保存到本地存储');
+            } catch (e) {
+                console.log('本地存储失败：', e);
+            }
+        }
+
+        function getCheckedRadioValue(name) {
+            var radios = document.getElementsByName(name);
+            for (var i = 0; i < radios.length; i++) {
+                if (radios[i].checked) {
+                    return radios[i].value;
+                }
+            }
+            return null;
+        }
+
+        function loadSavedData() {
+            try {
+                var savedData = localStorage.getItem('subjectSelectionData');
+                if (savedData) {
+                    userData = JSON.parse(savedData);
+                    
+                    // 填充表单数据
+                    if (userData.personalInfo) {
+                        document.getElementById('name').value = userData.personalInfo.name || '';
+                        document.getElementById('grade').value = userData.personalInfo.grade || '';
+                        document.getElementById('province').value = userData.personalInfo.province || '';
+                        document.getElementById('mode').value = userData.personalInfo.mode || '3+1+2';
+                    }
+                    console.log('已加载保存的数据');
+                }
+            } catch (e) {
+                console.log('无法加载保存的数据');
+            }
+        }
+
+        // ==================== 计算结果 ====================
+        function calculateAverage(scores) {
+            if (!scores || scores.length === 0) return 75;
+            var sum = 0;
+            for (var i = 0; i < scores.length; i++) {
+                sum += scores[i];
+            }
+            return sum / scores.length;
+        }
+
+        function calculateCombinationScore(combo) {
+            var weights = {
+                '物化生': { physics: 0.4, chemistry: 0.3, biology: 0.3 },
+                '物化地': { physics: 0.4, chemistry: 0.3, geography: 0.3 },
+                '物化政': { physics: 0.4, chemistry: 0.3, politics: 0.3 },
+                '历政地': { history: 0.4, politics: 0.3, geography: 0.3 },
+                '历政生': { history: 0.4, politics: 0.3, biology: 0.3 }
+            };
+            
+            var comboWeights = weights[combo];
+            var score = 0;
+            
+            for (var subject in comboWeights) {
+                if (comboWeights.hasOwnProperty(subject)) {
+                    var interest = userData.interests[subject] || 3;
+                    var performance = calculateAverage(userData.scores[subject] || [75, 75]);
+                    var interestScore = interest * 20; // 转换为20-100分
+                    var performanceScore = performance;
+                    
+                    // 兴趣占40%，成绩占60%
+                    var subjectScore = interestScore * 0.4 + performanceScore * 0.6;
+                    score += subjectScore * comboWeights[subject];
+                }
+            }
+            
+            return Math.min(Math.round(score), 100);
+        }
+
+        function calculateDirectionScores() {
+            // 计算物理方向得分
+            var physicsScore = {
+                interest: (userData.interests.physics || 3) * 20,
+                ability: ((userData.abilities.logic || 2) * 25 + (userData.abilities.analysis || 2) * 25) / 2,
+                performance: calculateAverage(userData.scores.physics || [75, 75]),
+                total: 0
+            };
+            physicsScore.total = Math.round(
+                physicsScore.interest * 0.3 + 
+                physicsScore.ability * 0.3 + 
+                physicsScore.performance * 0.4
+            );
+            
+            // 计算历史方向得分
+            var historyScore = {
+                interest: (userData.interests.history || 3) * 20,
+                ability: ((userData.abilities.memory || 2) * 25 + (userData.abilities.express || 2) * 25) / 2,
+                performance: calculateAverage(userData.scores.history || [75, 75]),
+                total: 0
+            };
+            historyScore.total = Math.round(
+                historyScore.interest * 0.3 + 
+                historyScore.ability * 0.3 + 
+                historyScore.performance * 0.4
+            );
+            
+            return { physicsScore: physicsScore, historyScore: historyScore };
+        }
+
+        function getCombinationDescription(combo) {
+            var descriptions = {
+                '物化生': '传统理科组合，专业覆盖面最广，适合医学、生物科学、化学化工、材料科学等专业。学习难度较大，需要较强的逻辑思维和实验能力。',
+                '物化地': '理科组合，适合地理信息科学、环境工程、地质学、测绘工程等专业。具有文理交叉特点，需要一定的空间想象能力。',
+                '物化政': '文理结合组合，适合公安技术、政治学、国际关系、工程管理等专业。可报考军事、公安类院校，需要较强的综合能力。',
+                    '历政地': '传统文科组合，适合法学、社会学、管理学、新闻传播、历史学等专业。注重人文素养和思辨能力培养。',
+                    '历政生': '文理交叉组合，适合心理学、教育学、公共卫生、社会工作等专业。具有跨学科优势，学习难度相对适中。'
+                };
+                return descriptions[combo] || '该组合具有一定的特色和优势。';
+            }
+
+            function analyzeStrengths() {
+                var strengths = [];
+                var interests = userData.interests;
+                var scores = userData.scores;
+                
+                // 分析兴趣优势
+                var interestEntries = [];
+                for (var subject in interests) {
+                    if (interests.hasOwnProperty(subject)) {
+                        interestEntries.push([subject, interests[subject]]);
+                    }
+                }
+                
+                // 简单排序
+                interestEntries.sort(function(a, b) {
+                    return b[1] - a[1];
+                });
+                
+                for (var i = 0; i < Math.min(2, interestEntries.length); i++) {
+                    var subject = interestEntries[i][0];
+                    var score = interestEntries[i][1];
+                    if (score >= 4) {
+                        strengths.push('对' + getSubjectName(subject) + '有浓厚兴趣（' + score + '分）');
+                    }
+                }
+                
+                // 分析成绩优势
+                for (var subject in scores) {
+                    if (scores.hasOwnProperty(subject)) {
+                        var avg = calculateAverage(scores[subject]);
+                        if (avg >= 85) {
+                            strengths.push(getSubjectName(subject) + '成绩优秀（平均' + avg.toFixed(1) + '分）');
+                        }
+                    }
+                }
+                
+                // 分析能力优势
+                var abilities = userData.abilities;
+                if (abilities.logic >= 3) strengths.push('逻辑思维能力较强');
+                if (abilities.memory >= 3) strengths.push('记忆能力较好');
+                if (abilities.analysis >= 3) strengths.push('分析归纳能力突出');
+                if (abilities.express >= 3) strengths.push('表达论述能力良好');
+                
+                return strengths.length > 0 ? strengths : ['各科表现均衡，有较好的综合基础'];
+            }
+
+            function analyzeWeaknesses() {
+                var weaknesses = [];
+                var interests = userData.interests;
+                var scores = userData.scores;
+                
+                // 分析兴趣不足
+                for (var subject in interests) {
+                    if (interests.hasOwnProperty(subject)) {
+                        if (interests[subject] <= 2) {
+                            weaknesses.push('对' + getSubjectName(subject) + '兴趣一般，可能需要更多时间培养兴趣');
+                        }
+                    }
+                }
+                
+                // 分析成绩短板
+                for (var subject in scores) {
+                    if (scores.hasOwnProperty(subject)) {
+                        var avg = calculateAverage(scores[subject]);
+                        var scoreArray = scores[subject];
+                        if (avg < 70 && scoreArray[0] > 0 && scoreArray[1] > 0) {
+                            weaknesses.push(getSubjectName(subject) + '基础有待加强（平均' + avg.toFixed(1) + '分）');
+                        }
+                    }
+                }
+                
+                // 分析能力短板
+                var abilities = userData.abilities;
+                if (abilities.logic <= 2) weaknesses.push('逻辑思维能力有待提升，可通过练习逻辑题加强');
+                if (abilities.memory <= 2) weaknesses.push('记忆能力需加强，可尝试多种记忆方法');
+                
+                return weaknesses.length > 0 ? weaknesses : ['无明显短板，继续保持当前学习状态'];
+            }
+
+            function getSubjectName(subject) {
+                var nameMap = {
+                    'physics': '物理',
+                    'history': '历史',
+                    'chemistry': '化学',
+                    'biology': '生物',
+                    'geography': '地理',
+                    'politics': '政治',
+                    'chinese': '语文',
+                    'math': '数学',
+                    'english': '英语'
+                };
+                return nameMap[subject] || subject;
+            }
+
+            function getDirectionExplanation(direction, physicsScore, historyScore) {
+                if (direction === '物理方向') {
+                    return '你的逻辑思维和分析能力较为突出，在理工科学习上有明显优势。物理方向专业覆盖面广，就业前景广阔，适合对科学技术有浓厚兴趣的学生。';
+                } else if (direction === '历史方向') {
+                    return '你的记忆和表达能力较为突出，在人文社科学习上更有优势。历史方向注重人文素养培养，适合对社会人文有浓厚兴趣的学生。';
+                } else {
+                    return '你的文理科能力较为均衡，具有跨学科学习潜力。建议结合个人兴趣、职业规划和学校资源优势进行选择，也可考虑文理结合的组合。';
+                }
+            }
+
+            function calculateResults() {
+                // 验证最后一步
+                if (!validateStep5()) {
+                    return;
+                }
+                
+                // 保存最后一步数据
+                saveCurrentStepData();
+                
+                // 计算方向得分
+                var directionScores = calculateDirectionScores();
+                
+                // 计算各组合得分
+                var combinations = ['物化生', '物化地', '物化政', '历政地', '历政生'];
+                var combinationScores = {};
+                for (var i = 0; i < combinations.length; i++) {
+                    var combo = combinations[i];
+                    combinationScores[combo] = calculateCombinationScore(combo);
+                }
+                
+                // 排序组合
+                var combinationEntries = [];
+                for (var combo in combinationScores) {
+                    if (combinationScores.hasOwnProperty(combo)) {
+                        combinationEntries.push([combo, combinationScores[combo]]);
+                    }
+                }
+                
+                combinationEntries.sort(function(a, b) {
+                    return b[1] - a[1];
+                });
+                
+                var combinationRank = [];
+                for (var i = 0; i < combinationEntries.length; i++) {
+                    combinationRank.push({
+                        combo: combinationEntries[i][0],
+                        score: combinationEntries[i][1],
+                        rank: i + 1
+                    });
+                }
+                
+                // 确定推荐方向
+                var recommendation = '';
+                var diff = directionScores.physicsScore.total - directionScores.historyScore.total;
+                
+                if (diff > 10) {
+                    recommendation = '物理方向';
+                } else if (diff < -10) {
+                    recommendation = '历史方向';
+                } else {
+                    recommendation = '文理均衡';
+                }
+                
+                // 生成结果
+                userData.results = {
+                    recommendation: recommendation,
+                    directionScores: directionScores,
+                    combinationRank: combinationRank,
+                    strengths: analyzeStrengths(),
+                    weaknesses: analyzeWeaknesses()
+                };
+                
+                // 显示结果
+                showResults();
+            }
+
+            function showResults() {
+                var results = userData.results;
+                var recommendation = results.recommendation;
+                var directionScores = results.directionScores;
+                var combinationRank = results.combinationRank;
+                var strengths = results.strengths;
+                var weaknesses = results.weaknesses;
+                
+                var physicsTotal = directionScores.physicsScore.total;
+                var historyTotal = directionScores.historyScore.total;
+                var directionClass = recommendation === '物理方向' ? 'physics' : 
+                                   recommendation === '历史方向' ? 'history' : 'balanced';
+                
+                // 生成组合列表HTML
+                var combinationsHTML = '';
+                for (var i = 0; i < combinationRank.length; i++) {
+                    var item = combinationRank[i];
+                    combinationsHTML += `
+                        <div class="combination-item rank-${item.rank}">
+                            <div class="rank">第${item.rank}名</div>
+                            <div class="combo-name">${item.combo}</div>
+                            <div class="combo-score">适配度：${item.score}分</div>
+                            <div class="combo-desc">${getCombinationDescription(item.combo)}</div>
+                        </div>
+                    `;
+                }
+                
+                // 生成优势列表HTML
+                var strengthsHTML = '';
+                for (var i = 0; i < strengths.length; i++) {
+                    strengthsHTML += '<li>' + strengths[i] + '</li>';
+                }
+                
+                // 生成注意事项列表HTML
+                var weaknessesHTML = '';
+                for (var i = 0; i < weaknesses.length; i++) {
+                    weaknessesHTML += '<li>' + weaknesses[i] + '</li>';
+                }
+                
+                var resultHTML = `
+                    <div class="results-container">
+                        <h2>测评结果分析</h2>
+                        
+                        <div class="result-summary">
+                            <h3>综合建议</h3>
+                            <div class="recommendation-card ${directionClass}">
+                                <h4>推荐方向：${recommendation}</h4>
+                                <p>${getDirectionExplanation(recommendation, physicsTotal, historyTotal)}</p>
+                                <p>得分对比：物理方向 ${physicsTotal}分 vs 历史方向 ${historyTotal}分</p>
+                            </div>
+                        </div>
+                        
+                        <div class="score-comparison">
+                            <h3>方向得分对比</h3>
+                            <div class="score-bars">
+                                <div class="score-bar">
+                                    <div class="bar-label">物理方向</div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill physics" id="physicsBar" style="height: ${physicsTotal}%">
+                                            <div class="bar-value">${physicsTotal}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="score-bar">
+                                    <div class="bar-label">历史方向</div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill history" id="historyBar" style="height: ${historyTotal}%">
+                                            <div class="bar-value">${historyTotal}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="combinations-list">
+                            <h3>选科组合推荐排名</h3>
+                            ${combinationsHTML}
+                        </div>
+                        
+                        <div class="analysis-section">
+                            <h3>你的优势</h3>
+                            <ul>${strengthsHTML}</ul>
+                        </div>
+                        
+                        <div class="analysis-section">
+                            <h3>注意事项</h3>
+                            <ul>${weaknessesHTML}</ul>
+                        </div>
+                        
+                        <div class="result-actions">
+                            <button class="result-btn" id="printBtn" onclick="window.print()">打印结果</button>
+                            <button class="result-btn" id="restartBtn" onclick="restartAssessment()">重新测评</button>
+                            <button class="result-btn" id="saveBtn" onclick="saveResults()">保存结果</button>
+                        </div>
+                        
+                        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; font-size: 0.9em; color: #666;">
+                            <h4>使用说明：</h4>
+                            <p>1. 本测评结果基于您的输入数据计算得出，仅供参考。</p>
+                            <p>2. 建议结合个人兴趣、学校资源和老师建议做出最终决定。</p>
+                            <p>3. 您可以通过"保存结果"按钮将本次测评结果保存到本地。</p>
+                            <p>4. 如需调整，可点击"重新测评"返回修改。</p>
+                        </div>
+                    </div>
+                `;
+                
+                // 创建结果步骤
+                var step6 = document.getElementById('step6');
+                if (!step6) {
+                    step6 = document.createElement('div');
+                    step6.id = 'step6';
+                    step6.className = 'step';
+                    document.getElementById('app').appendChild(step6);
+                }
+                step6.innerHTML = resultHTML;
+                
+                // 显示结果步骤
+                showStep(6);
+                
+                // 动画效果
+                setTimeout(function() {
+                    var physicsBar = document.getElementById('physicsBar');
+                    var historyBar = document.getElementById('historyBar');
+                    if (physicsBar) physicsBar.style.height = physicsTotal + '%';
+                    if (historyBar) historyBar.style.height = historyTotal + '%';
+                }, 100);
+            }
+
+            // ==================== 工具函数 ====================
+            function saveResults() {
+                var dataStr = JSON.stringify(userData, null, 2);
+                var dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                var exportFileDefaultName = '分科测评结果_' + new Date().toISOString().slice(0,10) + '.json';
+                
+                var linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                alert('结果已保存为JSON文件！');
+            }
+
+            function restartAssessment() {
+                if (confirm('确定要重新开始测评吗？所有数据将被清除。')) {
+                    userData = {
+                        personalInfo: {},
+                        interests: {},
+                        scores: {},
+                        abilities: {},
+                        career: {},
+                        results: {}
+                    };
+                    
+                    // 清除表单数据
+                    var forms = document.querySelectorAll('input, select, textarea');
+                    for (var i = 0; i < forms.length; i++) {
+                        if (forms[i].type === 'text' || forms[i].type === 'number') {
+                            forms[i].value = '';
+                        } else if (forms[i].type === 'radio' || forms[i].type === 'checkbox') {
+                            forms[i].checked = false;
+                        } else if (forms[i].tagName === 'SELECT') {
+                            forms[i].selectedIndex = 0;
+                        }
+                    }
+                    
+                    // 清除本地存储
+                    localStorage.removeItem('subjectSelectionData');
+                    
+                    // 重置到第一步
+                    showStep(1);
+                    
+                    alert('测评已重置，可以重新开始！');
+                }
+            }
+
+            // ==================== 全局函数导出 ====================
+            window.nextStep = nextStep;
+            window.prevStep = prevStep;
+            window.calculateResults = calculateResults;
+            window.toggleTheme = toggleTheme;
+            window.restartAssessment = restartAssessment;
+            window.saveResults = saveResults;
+
+            // 添加键盘快捷键支持
+            document.addEventListener('keydown', function(event) {
+                // 回车键前进
+                if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
+                    event.preventDefault();
+                    if (currentStep < 5) {
+                        nextStep(currentStep + 1);
+                    } else if (currentStep === 5) {
+                        calculateResults();
+                    }
+                }
+                
+                // 左右箭头切换步骤
+                if (event.key === 'ArrowLeft' && currentStep > 1) {
+                    prevStep(currentStep - 1);
+                }
+                if (event.key === 'ArrowRight' && currentStep < 6) {
+                    if (currentStep < 5) {
+                        nextStep(currentStep + 1);
+                    } else if (currentStep === 5) {
+                        calculateResults();
+                    }
+                }
+            });
+
+            console.log('系统初始化完成！当前步骤：' + currentStep);
+
+        })();
+        // ==================== 主程序结束 ====================
+    </script>
+</body>
+</html>
